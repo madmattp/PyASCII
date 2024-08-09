@@ -93,8 +93,8 @@ def salvar_frames(frames, output_path, fps):
 
 def load_sprites(sprite_sheet_image, sprite_width, sprite_height, monochrome_filter):
     sheet_width, sheet_height = sprite_sheet_image.size
-    filters = {"Orange_Terminal": ((252, 176, 32), (10, 6, 3)),
-               "Capuccino_Brown":((200, 185, 150), (61, 49, 40)),
+    filters = {"Orange": ((252, 176, 32), (10, 6, 3)),
+               "Capuccino":((200, 185, 150), (61, 49, 40)),
                "Brat": ((137, 205, 0), (0, 0, 0)),
                "Fairy": ((174, 255, 223), (90, 84, 117)),
                "Bloody": ((255, 42, 0), (43, 12, 0)),
