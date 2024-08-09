@@ -310,10 +310,4 @@ if __name__ == "__main__":
     execution_time = end_time - start_time
     print(f"Execution time: {execution_time} seconds")
 
-
-    """
-
-    limpeza e comentários
-    """
-
     
