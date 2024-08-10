@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from PIL import Image, ImageOps
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from time import time
