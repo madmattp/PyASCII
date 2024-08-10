@@ -2,7 +2,6 @@ from PIL import Image, ImageOps
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from time import time
 from multiprocessing import Process
-from threading import Thread
 import numpy as np
 import cv2
 import os
@@ -307,6 +306,9 @@ if __name__ == "__main__":
         exit()
 
     end_time = time()
+    execution_time = end_time - start_time
+    print(f"Execution time: {execution_time} seconds")
+
     execution_time = end_time - start_time
     print(f"Execution time: {execution_time} seconds")
 
