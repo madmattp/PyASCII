@@ -2,6 +2,7 @@ from PIL import Image, ImageOps
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from time import time
 from multiprocessing import Process
+from threading import Thread
 import numpy as np
 import cv2
 import os
@@ -192,7 +193,10 @@ def video_processing(video_name, resolution, high_contrast, sprites, output_file
         procs = []
         
         for subclip in files:
-            proc = Process(target=process_subclip, args=(sprites, subclip, ct, ref, high_contrast))
+            if os.name == "nt": # Windows (Existe um bug envolvendo a leitura dos arquivos temporários quando Process() é utilizado no Windows, então foi necessário o uso de Thread())
+                proc = Thread(target=process_subclip, args=(sprites, subclip, ct, ref, high_contrast))
+            elif os.name == "posix": # Linux
+                proc = Process(target=process_subclip, args=(sprites, subclip, ct, ref, high_contrast))
             procs.append(proc)
             proc.start()
             ct += 1
