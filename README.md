@@ -1,5 +1,7 @@
-![PyAscii_image](https://github.com/user-attachments/assets/000362a2-0bf2-45b9-a293-a957f3cd4590)
-![image](https://github.com/user-attachments/assets/d178fe02-52b4-467f-9cec-67b40ecc3057)
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/000362a2-0bf2-45b9-a293-a957f3cd4590" alt="PyAscii_image" width="45%">
+  <img src="https://github.com/user-attachments/assets/d178fe02-52b4-467f-9cec-67b40ecc3057" alt="image" width="45%">
+</p>
 
 # PyASCII
 ![image](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
