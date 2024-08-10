@@ -6,7 +6,6 @@
 # PyASCII
 [![image](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)](https://www.python.org/downloads/release/python-3119/)
 [![image](https://img.shields.io/badge/OpenCV-27338e?style=for-the-badge&logo=OpenCV&logoColor=white)](https://pypi.org/project/opencv-python/)
-[![image](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://www.linux.org/pages/download/)
 
 PyASCII is a Python script that applies an ASCII art filter to both images and videos. The script allows for customization of resolution, contrast, and color filters, and processes videos by dividing them into subclips for efficient processing.
 
@@ -20,7 +19,7 @@ The Sprite Sheet used in the script was made by [@DanXimemes](https://x.com/DanX
 - **Multi-Processing**: Utilizes multiple CPU cores for faster video processing.
 
 ## Requirements
-- A Linux Machine (A Windows version is in development)
+- Linux or Windows Operating System
 - Python >= 3.11
 - Required Python libraries:
   - `Pillow==10.4.0`
