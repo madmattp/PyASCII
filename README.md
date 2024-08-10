@@ -4,9 +4,9 @@
 </p>
 
 # PyASCII
-![image](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
-![image](https://img.shields.io/badge/OpenCV-27338e?style=for-the-badge&logo=OpenCV&logoColor=white)
-![image](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
+[![image](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)](https://www.python.org/downloads/release/python-3119/)
+[![image](https://img.shields.io/badge/OpenCV-27338e?style=for-the-badge&logo=OpenCV&logoColor=white)](https://pypi.org/project/opencv-python/)
+[![image](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://www.linux.org/pages/download/)
 
 PyASCII is a Python script that applies an ASCII art filter to both images and videos. The script allows for customization of resolution, contrast, and color filters, and processes videos by dividing them into subclips for efficient processing.
 
