@@ -98,7 +98,6 @@ def load_sprites(sprite_sheet_image, sprite_width, sprite_height, monochrome_fil
                "Fairy": ((174, 255, 223), (90, 84, 117)),
                "Bloody": ((255, 42, 0), (43, 12, 0)),
                "Lavender": ((196, 167, 231), (35, 33, 54)),
-               "Poiple": ((170, 6, 115), (49, 8, 86)),
                "Cyan": ((0, 204, 255), (0, 34, 43)),
                "Vapor": ((250, 185, 253), (75, 123, 222)),
                "Matrix": ((0,255,0), (0,39,6))}
@@ -248,7 +247,7 @@ def parse_arguments():
 
     parser.add_argument('-r', '--resolution', metavar='RES', default=720, type=int, help='Sets the resolution of the output image.')
     parser.add_argument('-f', '--filter', metavar='FILTER', default=None,
-                        choices=["Orange", "Capuccino", "Brat", "Fairy", "Bloody", "Lavender", "Poiple", "Cyan", "Vapor", "Matrix"], help='Applies a filter to the output.')
+                        choices=["Orange", "Capuccino", "Brat", "Fairy", "Bloody", "Lavender", "Cyan", "Vapor", "Matrix"], help='Applies a filter to the output.')
     parser.add_argument('-m', '--media', metavar='MEDIA', required=True, help='Specifies the image/video to be used as input.')
     parser.add_argument("-c", "--contrast", action='store_true', help='Increases image contrast.')
     parser.add_argument("-o", "--output", metavar="PATH", default=None, help='Changes the output path.')
