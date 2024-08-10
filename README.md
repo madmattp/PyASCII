@@ -10,7 +10,7 @@ PyASCII is a Python script that applies an ASCII art filter to both images and v
 - **Multi-Processing**: Utilizes multiple CPU cores for faster video processing.
 
 ## Requirements
-
+- A Linux Machine (A Windows version is in development)
 - Python >= 3.11
 - Required Python libraries:
   - `Pillow==10.4.0`
@@ -21,4 +21,4 @@ PyASCII is a Python script that applies an ASCII art filter to both images and v
 Install the required libraries using pip:
 
 ```bash
-pip install Pillow moviepy opencv_contrib_python numpy
+pip install -r requirements.txt
