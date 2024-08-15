@@ -10,6 +10,7 @@ import cv2
 import os
 import re
 import argparse
+import tomllib
 
 if (not os.path.exists('PyASCII/temp')):
     os.makedirs('PyASCII/temp')
@@ -20,6 +21,11 @@ else:
         file_path = os.path.join("PyASCII/temp", file)
         if os.path.isfile(file_path):
             os.remove(file_path)
+
+def load_filters():
+    with open('filters.toml', 'rb') as file:
+        filters = tomllib.load(file)
+    return filters
 
 #### Image Tools ####
 
@@ -36,11 +42,6 @@ def resize_image(image, ref_size):
         rows = int((rows / cols) * ref_size)
         cols = ref_size
     return image.resize((rows, cols), Image.LANCZOS)
-
-# Função para obter um sprite individual
-def get_sprite(x, y):
-    sprite = sprite_sheet_image.crop((x, y, x + sprite_width, y + sprite_height))
-    return sprite
 
 # Transformar o valor do pixel de 0 a 255 em 0 a 16
 def pixel_value_to_index(pixel_value):
@@ -94,17 +95,14 @@ def salvar_frames(frames, output_path, fps):
     video.release()
 
 def load_sprites(sprite_sheet_image, sprite_width, sprite_height, monochrome_filter):
+    # Função para obter um sprite individual
+    def get_sprite(x, y):
+        sprite = sprite_sheet_image.crop((x, y, x + sprite_width, y + sprite_height))
+        return sprite
+    
     sheet_width, sheet_height = sprite_sheet_image.size
-    filters = {"Orange": ((252, 176, 32), (10, 6, 3)),
-               "Capuccino":((200, 185, 150), (61, 49, 40)),
-               "Brat": ((137, 205, 0), (0, 0, 0)),
-               "Fairy": ((174, 255, 223), (90, 84, 117)),
-               "Bloody": ((255, 42, 0), (43, 12, 0)),
-               "Lavender": ((196, 167, 231), (35, 33, 54)),
-               "Cyan": ((0, 204, 255), (0, 34, 43)),
-               "Vapor": ((250, 185, 253), (75, 123, 222)),
-               "Matrix": ((0,255,0), (0,39,6))}
-
+    filters = load_filters()
+    
     if monochrome_filter != None:
         if monochrome_filter not in filters:
             print(f"[ KeyError ] '{monochrome_filter}' is not recognized as a filter!")
@@ -114,9 +112,9 @@ def load_sprites(sprite_sheet_image, sprite_width, sprite_height, monochrome_fil
             for x in range(0, sheet_width):
                 pixel_value = sprite_sheet_image.getpixel((x, y))
                 if pixel_value == (255, 255, 255, 255):
-                    sprite_sheet_image.putpixel((x, y), filters[monochrome_filter][0])
+                    sprite_sheet_image.putpixel((x, y), tuple(filters[monochrome_filter][0]))
                 else:
-                    sprite_sheet_image.putpixel((x, y), filters[monochrome_filter][1])
+                    sprite_sheet_image.putpixel((x, y), tuple(filters[monochrome_filter][1]))
     
     sprites = []
     for y in range(0, sprite_sheet_image.height, sprite_height):
@@ -253,7 +251,7 @@ def parse_arguments():
 
     parser.add_argument('-r', '--resolution', metavar='RES', default=720, type=int, help='Sets the resolution of the output image.')
     parser.add_argument('-f', '--filter', metavar='FILTER', default=None,
-                        choices=["Orange", "Capuccino", "Brat", "Fairy", "Bloody", "Lavender", "Cyan", "Vapor", "Matrix"], help='Applies a filter to the output.')
+                        choices=list(load_filters().keys()), help='Applies a filter to the output.')
     parser.add_argument('-m', '--media', metavar='MEDIA', required=True, help='Specifies the image/video to be used as input.')
     parser.add_argument("-c", "--contrast", action='store_true', help='Increases image contrast.')
     parser.add_argument("-o", "--output", metavar="PATH", default=None, help='Changes the output path.')
