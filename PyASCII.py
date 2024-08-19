@@ -68,6 +68,36 @@ def image_processing(image_name, resolution, high_contrast, sprites, output_file
     else:
         output_image.save("./PyASCII/output/PyAscii_image.png")
 
+##### GIF Tools #####
+
+def gif_processing(gif_name, resolution, high_contrast, sprites, output_file):
+    gif = Image.open(gif_name)
+    frames = []
+
+    for frame in range(0, gif.n_frames):
+        gif.seek(frame)
+        image = gif.convert("L")
+        image = resize_image(image, resolution)
+        if high_contrast:
+            image = ImageOps.equalize(image)
+
+        output_width, output_height = image.size
+        output_image = Image.new("RGB", (output_width, output_height))
+        for y in range(0, output_height, sprite_height):
+            for x in range(0, output_width, sprite_width):
+                pixel_value = image.getpixel((x, y))
+                index = pixel_value_to_index(pixel_value)
+                sprite = sprites[index]
+                output_image.paste(sprite, (x, y))
+
+        frames.append(output_image)
+
+    if output_file != None:
+        frames[0].save(output_file, save_all=True, append_images=frames[1:], loop=0)
+    else:
+        frames[0].save("./PyASCII/output/PyAscii_gif.gif", save_all=True, append_images=frames[1:], loop=0)
+
+
 ##### Video Tools #####
 
 def extrair_frames(input_video_path):
@@ -278,6 +308,15 @@ def is_video(file_path):
     finally:
         video.release()
 
+def is_gif(file_path):
+    try:
+        with Image.open(file_path) as img:
+            if img.format == 'GIF':
+                return True
+        return False
+    except (IOError, SyntaxError):
+        return False
+
 
 if __name__ == "__main__":
     start_time = time()
@@ -293,18 +332,25 @@ if __name__ == "__main__":
     except FileNotFoundError:
         print("[ FileNotFoundError ] Sprite Sheet not found!")
 
-    if is_image(args.media):
+
+    if is_gif(args.media):
+        gif_processing(gif_name=args.media,
+                       resolution=resolution,
+                       high_contrast=args.contrast,
+                       sprites=sprites,
+                       output_file=args.output)
+    elif is_image(args.media):
         image_processing(image_name=args.media,
-                        resolution=resolution,
-                        high_contrast=args.contrast,
-                        sprites=sprites,
-                        output_file=args.output)
+                         resolution=resolution,
+                         high_contrast=args.contrast,
+                         sprites=sprites,
+                         output_file=args.output)
     elif is_video(args.media):
         video_processing(video_name=args.media,
-                        resolution=resolution,
-                        high_contrast=args.contrast,
-                        sprites=sprites,
-                        output_file=args.output)
+                         resolution=resolution,
+                         high_contrast=args.contrast,
+                         sprites=sprites,
+                         output_file=args.output)
     else:
         print("Invalid media format!")
         exit()
