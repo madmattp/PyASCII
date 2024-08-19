@@ -73,6 +73,7 @@ def image_processing(image_name, resolution, high_contrast, sprites, output_file
 def gif_processing(gif_name, resolution, high_contrast, sprites, output_file):
     gif = Image.open(gif_name)
     frames = []
+    durations = []
 
     for frame in range(0, gif.n_frames):
         gif.seek(frame)
@@ -91,11 +92,12 @@ def gif_processing(gif_name, resolution, high_contrast, sprites, output_file):
                 output_image.paste(sprite, (x, y))
 
         frames.append(output_image)
+        durations.append(gif.info['duration'])
 
     if output_file != None:
-        frames[0].save(output_file, save_all=True, append_images=frames[1:], loop=0)
+        frames[0].save(output_file, save_all=True, append_images=frames[1:], duration=durations, loop=0)
     else:
-        frames[0].save("./PyASCII/output/PyAscii_gif.gif", save_all=True, append_images=frames[1:], loop=0)
+        frames[0].save("./PyASCII/output/PyAscii_gif.gif", save_all=True, append_images=frames[1:], duration=durations, loop=0)
 
 
 ##### Video Tools #####
