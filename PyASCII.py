@@ -32,7 +32,7 @@ def load_filters():
 # Muda a resolução da imagem sem perder a proporção
 def resize_image(image, ref_size):
     rows, cols = image.size
-    if rows > cols:
+    if rows < cols:
         cols = int((cols / rows) * ref_size)
         rows = ref_size
     elif rows == cols:
