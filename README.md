@@ -18,6 +18,17 @@ The Sprite Sheet used in the script was made by [@DanXimemes](https://x.com/DanX
 - **Custom Filters**: Apply various monochrome filters to the output.
 - **Multi-Processing**: Utilizes multiple CPU cores for faster video processing.
 
+## New: Simple GUI Version
+
+- **Simple GUI**: A new version of the script includes a basic Graphical User Interface (GUI) that simplifies the process of selecting files, adjusting settings, and executing the conversion. This GUI version is designed to be user-friendly, especially for those who prefer a visual interface over command-line operations.
+
+To use the GUI version, simply run the `PyASCII_GUI.py` script. The GUI allows you to:
+
+- Select an image or video file.
+- Set the desired resolution and filter options.
+- Start the ASCII conversion process with a single click.
+
+
 ## Requirements
 - Linux or Windows Operating System
 - Python >= 3.11
