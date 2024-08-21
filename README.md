@@ -1,6 +1,6 @@
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/000362a2-0bf2-45b9-a293-a957f3cd4590" alt="PyAscii_image" width="45%">
-  <img src="https://github.com/user-attachments/assets/d178fe02-52b4-467f-9cec-67b40ecc3057" alt="image" width="45%">
+  <img src="https://github.com/user-attachments/assets/000362a2-0bf2-45b9-a293-a957f3cd4590" alt="PyASCII_image" width="45%">
+  <img src="https://github.com/user-attachments/assets/46baa5fc-dd5f-467e-a5be-0a08ab8bc0dc" alt="PyASCII_gif" width="45%">
 </p>
 
 # PyASCII
