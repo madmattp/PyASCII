@@ -97,6 +97,7 @@ python3.11 PyASCII.py -m cat_huh.mp4 -r 1080 -f Brat
 ```bash
 PyASCII.py          # Main script
 sprite_sheet.png    # Sprite sheet used for ASCII art
+filters.toml        # Filters
 PyASCII/
 ├── temp/           # Temporary directory for storing subclips
 └── output/         # Directory for storing the final output
