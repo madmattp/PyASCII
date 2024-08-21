@@ -12,10 +12,10 @@ import re
 import argparse
 import tomllib
 
+if (not os.path.exists('PyASCII/output')):
+    os.makedirs('PyASCII/output')
 if (not os.path.exists('PyASCII/temp')):
     os.makedirs('PyASCII/temp')
-elif (not os.path.exists('PyASCII/output')):
-    os.makedirs('PyASCII/output')
 else:
     for file in os.listdir("PyASCII/temp"):
         file_path = os.path.join("PyASCII/temp", file)
