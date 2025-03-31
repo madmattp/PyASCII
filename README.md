@@ -16,7 +16,7 @@ The Sprite Sheet used in the script was made by [@DanXimemes](https://x.com/DanX
 - **Customizable Filters**: Apply color filters using built-in options or configure your own through the [filters.toml](https://github.com/madmattp/PyASCII/blob/main/filters.toml) file.
 - **Multi-threaded Video Processing**: Speeds up video conversion by utilizing multiple CPU cores.
 
-## GUI
+## Graphical User Interface
 
 A separate script includes a basic Graphical User Interface (GUI) that simplifies the process of selecting files, adjusting settings, and executing the conversion. This GUI version is designed to be user-friendly, especially for those who prefer a visual interface over command-line operations.
 
