@@ -277,7 +277,7 @@ if __name__ == "__main__":
                             sprite_height=sprite_height,
                             monochrome_filter=args.filter)
     except FileNotFoundError:
-        print("[ FileNotFoundError ] Sprite Sheet not found!")
+        print("[ FileNotFoundError ] Sprite Sheet 'sprite_sheet.png' not found!")
 
     try:
         if is_gif(file_path=args.input):
