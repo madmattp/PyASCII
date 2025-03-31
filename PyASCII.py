@@ -40,7 +40,7 @@ def load_filters():
         print(f"[TOMLDecodeError] Error parsing the TOML file: {e}\n Using default filter pack...")
         return default_filters
     
-def load_sprites(sprite_sheet_image, sprite_width, sprite_height, monochrome_filter):
+def load_sprites(sprite_sheet_image: Image, sprite_width: int, sprite_height: int, monochrome_filter: tuple):
     # Função para obter um sprite individual
     def get_sprite(x, y):
         sprite = sprite_sheet_image.crop((x, y, x + sprite_width, y + sprite_height))
@@ -87,7 +87,7 @@ def parse_arguments():
 
 
 # Muda a resolução da imagem sem perder a proporção
-def resize_image(image, ref_size):
+def resize_image(image: Path, ref_size: int):
     rows, cols = image.size
     if rows < cols:
         cols = int((cols / rows) * ref_size)
@@ -219,7 +219,7 @@ def gif_processing(gif_path: Path, sprites: list, contrast: float, sharpness: fl
 
     return gif_buffer
     
-def is_image(file_path):
+def is_image(file_path: Path):
     try:
         with Image.open(file_path) as img:
             img.verify()
@@ -227,7 +227,7 @@ def is_image(file_path):
     except (IOError, SyntaxError):
         return False
 
-def is_video(file_path):
+def is_video(file_path: Path):
     try:
         video = cv2.VideoCapture(file_path)
         if video.isOpened():
@@ -238,7 +238,7 @@ def is_video(file_path):
     finally:
         video.release()
 
-def is_gif(file_path):
+def is_gif(file_path: Path):
     try:
         with Image.open(file_path) as img:
             print(img.format)
