@@ -313,10 +313,11 @@ if __name__ == "__main__":
                         resolution=args.resolution)
             output_file = args.output if args.output is not None else "PyASCII_Video.mp4"
             ascii_video.write_videofile(output_file, codec="libx264")
-        else:
-            print("Invalid media format!")
-            exit()
     
+    except ValueError:
+        print(f"[ ValueError ] Input file does not have a valid format!")
+        sys.exit(1)
+            
     except FileNotFoundError:
         print(f"[ FileNotFoundError ] Input file {args.input} not found!")
         sys.exit(1)
