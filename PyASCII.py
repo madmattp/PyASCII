@@ -241,13 +241,11 @@ def is_video(file_path: Path) -> bool:
 def is_gif(file_path: Path) -> bool: 
     try:
         with Image.open(file_path) as img:
-            print(img.format)
             if img.format == 'GIF':
                 return True
         return False
     except (IOError, SyntaxError):
         return False
-
 
 # Argument Parsing... 
 def parse_arguments():
@@ -270,9 +268,6 @@ if __name__ == "__main__":
     
     args = parse_arguments()
 
-    filters = load_filters()
-    filter_chosen = filters[args.filter] if args.filter is not None else None
-
     try:
         sprite_sheet_image = Image.open("./sprite_sheet.png")
         sprite_height = 8
@@ -280,10 +275,9 @@ if __name__ == "__main__":
         sprites = load_sprites(sprite_sheet_image=sprite_sheet_image,
                             sprite_width=sprite_width,
                             sprite_height=sprite_height,
-                            monochrome_filter=filter_chosen)
+                            monochrome_filter=args.filter)
     except FileNotFoundError:
         print("[ FileNotFoundError ] Sprite Sheet not found!")
-
 
     try:
         if is_gif(file_path=args.input):
