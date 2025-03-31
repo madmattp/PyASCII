@@ -1,131 +1,45 @@
 #!/usr/bin/env python3
 
-from PIL import Image, ImageOps
-from moviepy.editor import VideoFileClip, concatenate_videoclips
-from time import time
-from multiprocessing import Process
-from threading import Thread
+from PIL import Image, Image, ImageEnhance
+from moviepy.editor import VideoFileClip, ImageSequenceClip
+import time
+from multiprocessing import Process, Manager
 import numpy as np
 import cv2
-import os
-import re
 import argparse
 import tomllib
+from pathlib import Path
+from io import BytesIO
+import sys
 
-if (not os.path.exists('PyASCII/output')):
-    os.makedirs('PyASCII/output')
-if (not os.path.exists('PyASCII/temp')):
-    os.makedirs('PyASCII/temp')
-else:
-    for file in os.listdir("PyASCII/temp"):
-        file_path = os.path.join("PyASCII/temp", file)
-        if os.path.isfile(file_path):
-            os.remove(file_path)
 
 def load_filters():
-    with open('filters.toml', 'rb') as file:
-        filters = tomllib.load(file)
-    return filters
+    default_filters = {
+        "Orange": ((252, 176, 32), (10, 6, 3)),
+        "Capuccino": ((200, 185, 150), (61, 49, 40)),
+        "Brat": ((137, 205, 0), (0, 0, 0)),
+        "Fairy": ((174, 255, 223), (90, 84, 117)),
+        "Bloody": ((255, 42, 0), (43, 12, 0)),
+        "Lavender": ((196, 167, 231), (35, 33, 54)),
+        "Cyan": ((0, 204, 255), (0, 34, 43)),
+        "Vapor": ((250, 185, 253), (75, 123, 222)),
+        "Matrix": ((0, 255, 0), (0, 39, 6)),
+        "ObraDinn": ((229, 255, 254), (51, 51, 25))
+    }
 
-#### Image Tools ####
-
-# Muda a resolução da imagem sem perder a proporção
-def resize_image(image, ref_size):
-    rows, cols = image.size
-    if rows < cols:
-        cols = int((cols / rows) * ref_size)
-        rows = ref_size
-    elif rows == cols:
-        cols = ref_size
-        rows = ref_size
-    else:
-        rows = int((rows / cols) * ref_size)
-        cols = ref_size
-    return image.resize((rows, cols), Image.LANCZOS)
-
-# Transformar o valor do pixel de 0 a 255 em 0 a 16
-def pixel_value_to_index(pixel_value):
-    return int((pixel_value / 255) * 16)
-
-def image_processing(image_name, resolution, high_contrast, sprites, output_file):
-    image = Image.open(image_name).convert("L")
-    image = resize_image(image, resolution)
-    if high_contrast:
-        image = ImageOps.equalize(image)
-    output_width, output_height = image.size
-
-    output_image = Image.new("RGB", (output_width, output_height))
-    for y in range(0, output_height, sprite_height):
-        for x in range(0, output_width, sprite_width):
-            pixel_value = image.getpixel((x, y))
-            index = pixel_value_to_index(pixel_value)
-            sprite = sprites[index]
-            output_image.paste(sprite, (x, y))
-
-    # Salva a imagem final como png
-    if output_file != None:
-        output_image.save(f"{output_file}")
-    else:
-        output_image.save("./PyASCII/output/PyAscii_image.png")
-
-##### GIF Tools #####
-
-def gif_processing(gif_name, resolution, high_contrast, sprites, output_file):
-    gif = Image.open(gif_name)
-    frames = []
-    durations = []
-
-    for frame in range(0, gif.n_frames):
-        gif.seek(frame)
-        image = gif.convert("L")
-        image = resize_image(image, resolution)
-        if high_contrast:
-            image = ImageOps.equalize(image)
-
-        output_width, output_height = image.size
-        output_image = Image.new("RGB", (output_width, output_height))
-        for y in range(0, output_height, sprite_height):
-            for x in range(0, output_width, sprite_width):
-                pixel_value = image.getpixel((x, y))
-                index = pixel_value_to_index(pixel_value)
-                sprite = sprites[index]
-                output_image.paste(sprite, (x, y))
-
-        frames.append(output_image)
-        durations.append(gif.info['duration'])
-
-    if output_file != None:
-        frames[0].save(output_file, save_all=True, append_images=frames[1:], duration=durations, loop=0)
-    else:
-        frames[0].save("./PyASCII/output/PyAscii_gif.gif", save_all=True, append_images=frames[1:], duration=durations, loop=0)
-
-
-##### Video Tools #####
-
-def extrair_frames(input_video_path):
-    cap = cv2.VideoCapture(input_video_path)
-    frames = []
+    try:
+        with open('filters.toml', 'rb') as file:
+            filters = tomllib.load(file)
+        return filters
     
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-        frames.append(frame)
+    except FileNotFoundError:
+        print("[FileNotFoundError] The 'filters.toml' file not found. Using default filter pack...")
+        return default_filters
     
-    cap.release()
-    return frames
-
-# Função para salvar frames como um novo vídeo
-def salvar_frames(frames, output_path, fps):
-    height, width, layers = frames[0].shape
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v') # ou 'XVID' para .avi
-    video = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+    except tomllib.TOMLDecodeError as e:
+        print(f"[TOMLDecodeError] Error parsing the TOML file: {e}\n Using default filter pack...")
+        return default_filters
     
-    for frame in frames:
-        video.write(frame)
-    
-    video.release()
-
 def load_sprites(sprite_sheet_image, sprite_width, sprite_height, monochrome_filter):
     # Função para obter um sprite individual
     def get_sprite(x, y):
@@ -156,19 +70,138 @@ def load_sprites(sprite_sheet_image, sprite_width, sprite_height, monochrome_fil
 
     return sprites
 
-# Função para processar cada subclipe
-def process_subclip(sprites, subclip, ct, ref, high_contrast):
-    frames = extrair_frames(subclip)
-    fps = cv2.VideoCapture(subclip).get(cv2.CAP_PROP_FPS)
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.description = f"{parser.prog}. An ASCII filter for images and videos."
 
-    for i in range(len(frames)):
-        # Carregar a imagem em escala de cinza
-        image = Image.fromarray(cv2.cvtColor(frames[i], cv2.COLOR_BGR2RGB)).convert("L")
-        image = resize_image(image, ref)
-        if high_contrast:
-            image = ImageOps.equalize(image) # Equaliza a imagem (aumenta contraste)
+    parser.add_argument('-i', '--input', metavar='PATH', required=True, help='Specifies the image/video to be used as input.')
+    parser.add_argument('-f', '--filter', metavar='FILTER', default=None, choices=list(load_filters().keys()), help='Applies a color filter to the output image.')
+    parser.add_argument('-s', '--sharpness', metavar='FACTOR', type=float, default=1, help="Adjusts the sharpness of the image. Default is 1.")
+    parser.add_argument('-c', '--contrast', metavar='FACTOR', type=float, default=1, help='Adjusts the contrast of the image. Default is 1.')
+    parser.add_argument('-r', '--resolution', metavar='RES', default=720, type=int, help='Sets the resolution of the output image.')
+    parser.add_argument('-o', '--output', metavar='PATH', default=None, help='Specifies the output file path. If not set, a default name will be used.')
+    parser.add_argument('-t', '--threads', metavar='INTEGER', type=int, default=1, help='Specifies the number of threads to use for parallel processing. Default is 1.')
+
+    args = parser.parse_args()
+    return args
+
+
+# Muda a resolução da imagem sem perder a proporção
+def resize_image(image, ref_size):
+    rows, cols = image.size
+    if rows < cols:
+        cols = int((cols / rows) * ref_size)
+        rows = ref_size
+    elif rows == cols:
+        cols = ref_size
+        rows = ref_size
+    else:
+        rows = int((rows / cols) * ref_size)
+        cols = ref_size
+    return image.resize((rows, cols), Image.LANCZOS)
+
+def sharpen(image: Image, factor: float):
+    if factor > 1:
+        enhancer = ImageEnhance.Sharpness(image)
+        sharp_image = enhancer.enhance(factor)
+        return sharp_image
+    return image
+
+# Transformar o valor do pixel de 0 a 255 em 0 a 16
+def pixel_value_to_index(pixel_value):
+    return int((pixel_value / 255) * 16)
+
+def image_processing(image_path: Path, sprites: list, contrast: float, sharpness: float, resolution: int):
+    with Image.open(image_path).convert('L') as image:
+        image = resize_image(image, resolution)
+        enhancer = ImageEnhance.Contrast(image)
+        image = enhancer.enhance(factor=contrast)
+        sharp_image = sharpen(image=image, factor=sharpness)
+        
+    image = sharp_image
+    
+    output_width, output_height = image.size
+    with Image.new("RGB", (output_width, output_height)) as output_image:
+        for y in range(0, output_height, sprite_height):
+            for x in range(0, output_width, sprite_width):
+                pixel_value = image.getpixel((x, y))
+                index = pixel_value_to_index(pixel_value)
+                sprite = sprites[index]
+                output_image.paste(sprite, (x, y))   
+
+    return output_image
+
+def video_processing(video_path: Path, threads: int, sprites: list, contrast: float, sharpness: float, resolution: int):
+    def frame_processing(image: Image, sprites: list, contrast: float, sharpness: float, resolution: int):
+        enhancer = ImageEnhance.Contrast(image)
+        image = enhancer.enhance(factor=contrast)
+        sharp_image = sharpen(image=image, factor=sharpness)
+        downscaled_image = resize_image(sharp_image, resolution)
+        image = downscaled_image.convert("L")
+
+        output_width, output_height = downscaled_image.size
+        with Image.new("RGB", (output_width, output_height)) as output_image:
+            for y in range(0, output_height, sprite_height):
+                for x in range(0, output_width, sprite_width):
+                    pixel_value = image.getpixel((x, y))
+                    index = pixel_value_to_index(pixel_value)
+                    sprite = sprites[index]
+                    output_image.paste(sprite, (x, y))   
+
+            return np.array(output_image)
+
+    def process_clip(index, sprites, all_processed_frames, frames, contrast, sharpness, downscale_pot):
+        processed_frames = []
+        for frame in frames:
+            frame = Image.fromarray(frame)
+            processed_frame = frame_processing(frame, sprites, contrast, sharpness, downscale_pot)
+            processed_frames.append(processed_frame)
+
+        all_processed_frames[index] = processed_frames
+
+    video = VideoFileClip(filename=video_path, audio=False)
+    audio_clip = video.audio
+    fps = video.fps
+
+    duration_per_process = video.duration / threads
+    manager = Manager()
+    all_processed_frames = manager.dict()
+    procs = []
+
+    for i in range(threads):
+        start = i * duration_per_process
+        end = min((i + 1) * duration_per_process, video.duration)
+
+        subclip = video.subclip(start, end)
+        frames = [frame for frame in subclip.iter_frames()]
+        proc = Process(target=process_clip, args=(i, sprites, all_processed_frames, frames, contrast, sharpness, resolution))
+        procs.append(proc)
+        proc.start()
+
+    for proc in procs:
+        proc.join()
+
+    all_processed_frames = dict(sorted(all_processed_frames.items()))
+    all_processed_frames = [frame for sublist in all_processed_frames.values() for frame in sublist]
+    final_clip = ImageSequenceClip(all_processed_frames, fps=fps)
+    final_clip = final_clip.set_audio(audio_clip)
+    
+    return final_clip
+
+def gif_processing(gif_path: Path, sprites: list, contrast: float, sharpness: float, resolution: int):
+    gif = Image.open(gif_path)
+    frames = []
+    durations = []
+
+    for frame in range(0, gif.n_frames):
+        gif.seek(frame)
+        image = gif.convert("L")
+        image = resize_image(image, resolution)
+        enhancer = ImageEnhance.Contrast(image)
+        image = enhancer.enhance(contrast)
+        image = sharpen(image=image, factor=sharpness)
+        
         output_width, output_height = image.size
-
         output_image = Image.new("RGB", (output_width, output_height))
         for y in range(0, output_height, sprite_height):
             for x in range(0, output_width, sprite_width):
@@ -177,120 +210,15 @@ def process_subclip(sprites, subclip, ct, ref, high_contrast):
                 sprite = sprites[index]
                 output_image.paste(sprite, (x, y))
 
-        frames[i] = cv2.cvtColor(np.array(output_image), cv2.COLOR_RGB2BGR)
+        frames.append(output_image)
+        durations.append(gif.info['duration'])
 
-    os.remove(f"./PyASCII/temp/subclip_{ct}.mp4") # Deleta subclipe antigo
+    gif_buffer = BytesIO()
+    frames[0].save(gif_buffer ,format="GIF", save_all=True, append_images=frames[1:], loop=0, duration=durations)
+    gif_buffer.seek(0)
 
-    height, width, layers = frames[0].shape
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v') # ou 'XVID' para .avi
-    video = cv2.VideoWriter(f"./PyASCII/temp/processed_subclip{ct}.mp4", fourcc, fps, (width, height))
+    return gif_buffer
     
-    for frame in frames:
-        video.write(frame)
-    
-    video.release()
-
-def get_numeric_part(filename):
-    # Extrai a parte numérica do nome do arquivo
-    match = re.search(r'\d+', filename)
-    return int(match.group()) if match else float('inf')
-
-def video_processing(video_name, resolution, high_contrast, sprites, output_file):
-    video = VideoFileClip(filename=video_name, audio=False)
-    ref = resolution
-
-    time_frag = 5  # Tempo em segundos de cada subclipe
-
-    index = 0
-    start = 0
-    qtd_procs = 0    # Variável utilizada para mensurar a quantidade de processos simultâneos, Não deve ultrapassar os.cpu_count()!!!
-    ct = 0           # Contador de subclipe
-    frag_counter = 0 # Variável para representar o frag{}.mp4 (conjunto de subclipes)
-    while(True):
-        while(qtd_procs < (os.cpu_count() - 1)):
-            if start + time_frag >= video.duration:
-                end = video.duration
-                clip = video.subclip(start, end)
-                clip.write_videofile(f"./PyASCII/temp/subclip_{index}.mp4")
-                break
-            else:
-                end = start + time_frag
-                clip = video.subclip(start, end)
-                clip.write_videofile(f"./PyASCII/temp/subclip_{index}.mp4")
-                start += time_frag
-            index += 1
-            qtd_procs += 1
-        
-        files = sorted([os.path.join("PyASCII/temp", f) for f in os.listdir("PyASCII/temp") if f.startswith('subclip')], key=get_numeric_part)
-        procs = []
-        
-        for subclip in files:
-            if os.name == "nt": # Windows (Existe um bug envolvendo a leitura dos arquivos temporários quando Process() é utilizado no Windows, então foi necessário o uso de Thread())
-                proc = Thread(target=process_subclip, args=(sprites, subclip, ct, ref, high_contrast))
-            elif os.name == "posix": # Linux
-                proc = Process(target=process_subclip, args=(sprites, subclip, ct, ref, high_contrast))
-            procs.append(proc)
-            proc.start()
-            ct += 1
-
-        for proc in procs:
-            proc.join()  
-
-        files = [os.path.join("PyASCII/temp", f) for f in os.listdir("PyASCII/temp") if f.startswith('processed_subclip')]
-        clips = [VideoFileClip(f) for f in sorted(files, key=get_numeric_part)]
-        final_clip = concatenate_videoclips(clips)
-        final_clip.write_videofile(f'./PyASCII/temp/frag{frag_counter}.mp4', codec='libx264')
-        frag_counter += 1
-
-        for file in files:
-            os.remove(file) # Remove os subclipes temporários
-
-        if end == video.duration:
-            break
-
-        qtd_procs = 0
-    video.close()
-
-    # Une subclipes em um único clipe (sem áudio)
-    files = [os.path.join("PyASCII/temp", f) for f in os.listdir("PyASCII/temp") if f.startswith('frag')]
-    clips = [VideoFileClip(f) for f in sorted(files, key=get_numeric_part)]
-    final_clip = concatenate_videoclips(clips)
-    if output_file == None:
-        output_video_path = './PyASCII/output/PyASCII_noaudio.mp4'
-    else:
-        output_video_path = f"{output_file}_NoAudio.mp4"
-    final_clip.write_videofile(output_video_path, codec='libx264')
-
-    files = [os.path.join("PyASCII/temp", f) for f in os.listdir("PyASCII/temp") if os.path.isfile(os.path.join("PyASCII/temp", f))]
-    for file in files:
-        os.remove(file) # Remove os subclipes temporários
-
-    input_video_path = video_name
-    video_clip = VideoFileClip(input_video_path)
-    audio_clip = video_clip.audio
-    final_video = VideoFileClip(output_video_path)
-    final_video_with_audio = final_video.set_audio(audio_clip)
-    if output_file == None:
-        final_output_path = './PyASCII/output/PyASCII.mp4'
-    else:
-        final_output_path = output_file
-    final_video_with_audio.write_videofile(final_output_path, codec='libx264', audio_codec='aac')
-
-# Argument Parsing... 
-def parse_arguments():
-    parser = argparse.ArgumentParser()
-    parser.description = f"{parser.prog}. An ASCII filter for images and videos."
-
-    parser.add_argument('-r', '--resolution', metavar='RES', default=720, type=int, help='Sets the resolution of the output image.')
-    parser.add_argument('-f', '--filter', metavar='FILTER', default=None,
-                        choices=list(load_filters().keys()), help='Applies a filter to the output.')
-    parser.add_argument('-m', '--media', metavar='MEDIA', required=True, help='Specifies the image/video to be used as input.')
-    parser.add_argument("-c", "--contrast", action='store_true', help='Increases image contrast.')
-    parser.add_argument("-o", "--output", metavar="PATH", default=None, help='Changes the output path.')
-
-    args = parser.parse_args()
-    return args
-
 def is_image(file_path):
     try:
         with Image.open(file_path) as img:
@@ -313,6 +241,7 @@ def is_video(file_path):
 def is_gif(file_path):
     try:
         with Image.open(file_path) as img:
+            print(img.format)
             if img.format == 'GIF':
                 return True
         return False
@@ -320,43 +249,78 @@ def is_gif(file_path):
         return False
 
 
-if __name__ == "__main__":
-    start_time = time()
+# Argument Parsing... 
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.description = f"{parser.prog}. An ASCII filter for images and videos."
 
+    parser.add_argument('-i', '--input', metavar='PATH', required=True, help='Specifies the image/video to be used as input.')
+    parser.add_argument('-f', '--filter', metavar='FILTER', default=None, choices=list(load_filters().keys()), help='Applies a color filter to the output image.')
+    parser.add_argument('-s', '--sharpness', metavar='FACTOR', type=float, default=1, help="Adjusts the sharpness of the image.")
+    parser.add_argument('-c', '--contrast', metavar='FACTOR', type=float, default=1, help='Adjusts the contrast of the image.')
+    parser.add_argument('-r', '--resolution', metavar='RES', default=720, type=int, help='Sets the resolution of the output image.')
+    parser.add_argument('-o', '--output', metavar='PATH', default=None, help='Specifies the output file path. If not set, a default name will be used.')
+    parser.add_argument('-t', '--threads', metavar='INTEGER', type=int, default=1, help='Specifies the number of threads to use for parallel processing.')
+
+    args = parser.parse_args()
+    return args
+
+if __name__ == "__main__":
+    start_time = time.time()
+    
     args = parse_arguments()
 
+    filters = load_filters()
+    filter_chosen = filters[args.filter] if args.filter is not None else None
+
     try:
-        resolution = int(args.resolution)
         sprite_sheet_image = Image.open("./sprite_sheet.png")
         sprite_height = 8
         sprite_width = 8
-        sprites = load_sprites(sprite_sheet_image, sprite_width, sprite_height, args.filter)
+        sprites = load_sprites(sprite_sheet_image=sprite_sheet_image,
+                            sprite_width=sprite_width,
+                            sprite_height=sprite_height,
+                            monochrome_filter=filter_chosen)
     except FileNotFoundError:
         print("[ FileNotFoundError ] Sprite Sheet not found!")
 
 
-    if is_gif(args.media):
-        gif_processing(gif_name=args.media,
-                       resolution=resolution,
-                       high_contrast=args.contrast,
-                       sprites=sprites,
-                       output_file=args.output)
-    elif is_image(args.media):
-        image_processing(image_name=args.media,
-                         resolution=resolution,
-                         high_contrast=args.contrast,
-                         sprites=sprites,
-                         output_file=args.output)
-    elif is_video(args.media):
-        video_processing(video_name=args.media,
-                         resolution=resolution,
-                         high_contrast=args.contrast,
-                         sprites=sprites,
-                         output_file=args.output)
-    else:
-        print("Invalid media format!")
-        exit()
+    try:
+        if is_gif(file_path=args.input):
+            gif_buffer = gif_processing(gif_path=args.input,
+                        sprites=sprites,
+                        contrast=args.contrast,
+                        sharpness=args.sharpness,
+                        resolution=args.resolution)
+            with open("PyASCII_Gif.gif", "wb") as f:
+                f.write(gif_buffer.getvalue())
 
-    end_time = time()
-    execution_time = end_time - start_time
-    print(f"Execution time: {execution_time} seconds")
+        elif is_image(file_path=args.input):
+            ascii_image = image_processing(image_path=args.input,
+                        sprites=sprites,
+                        contrast=args.contrast,
+                        sharpness=args.sharpness,
+                        resolution=args.resolution)
+            output_file = args.output if args.output is not None else "PyASCII_Image.png"
+            ascii_image.save(output_file)
+
+        elif is_video(file_path=args.input):
+            ascii_video = video_processing(video_path=args.input,
+                        threads=args.threads,
+                        sprites=sprites,
+                        contrast=args.contrast,
+                        sharpness=args.sharpness,
+                        resolution=args.resolution)
+            output_file = args.output if args.output is not None else "PyASCII_Video.mp4"
+            ascii_video.write_videofile(output_file, codec="libx264")
+        else:
+            print("Invalid media format!")
+            exit()
+    
+    except FileNotFoundError:
+        print(f"[ FileNotFoundError ] Input file {args.input} not found!")
+        sys.exit(1)
+
+    end_time = time.time() 
+    execution_time = end_time - start_time  
+    print(f"Processing time: {execution_time:.4f} seconds")
