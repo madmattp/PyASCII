@@ -13,7 +13,7 @@ from io import BytesIO
 import sys
 
 
-def load_filters():
+def load_filters() -> dict[str, tuple[tuple[int, int, int], tuple[int, int, int]]]:
     default_filters = {
         "Orange": ((252, 176, 32), (10, 6, 3)),
         "Capuccino": ((200, 185, 150), (61, 49, 40)),
@@ -40,9 +40,9 @@ def load_filters():
         print(f"[TOMLDecodeError] Error parsing the TOML file: {e}\n Using default filter pack...")
         return default_filters
     
-def load_sprites(sprite_sheet_image: Image, sprite_width: int, sprite_height: int, monochrome_filter: tuple):
+def load_sprites(sprite_sheet_image: Image, sprite_width: int, sprite_height: int, monochrome_filter: tuple) -> list:
     # Função para obter um sprite individual
-    def get_sprite(x, y):
+    def get_sprite(x: int, y: int):
         sprite = sprite_sheet_image.crop((x, y, x + sprite_width, y + sprite_height))
         return sprite
     
@@ -87,7 +87,7 @@ def parse_arguments():
 
 
 # Muda a resolução da imagem sem perder a proporção
-def resize_image(image: Path, ref_size: int):
+def resize_image(image: Image, ref_size: int) -> Image:
     rows, cols = image.size
     if rows < cols:
         cols = int((cols / rows) * ref_size)
@@ -100,7 +100,7 @@ def resize_image(image: Path, ref_size: int):
         cols = ref_size
     return image.resize((rows, cols), Image.LANCZOS)
 
-def sharpen(image: Image, factor: float):
+def sharpen(image: Image, factor: float) -> Image:
     if factor > 1:
         enhancer = ImageEnhance.Sharpness(image)
         sharp_image = enhancer.enhance(factor)
@@ -108,10 +108,10 @@ def sharpen(image: Image, factor: float):
     return image
 
 # Transformar o valor do pixel de 0 a 255 em 0 a 16
-def pixel_value_to_index(pixel_value):
+def pixel_value_to_index(pixel_value) -> int:
     return int((pixel_value / 255) * 16)
 
-def image_processing(image_path: Path, sprites: list, contrast: float, sharpness: float, resolution: int):
+def image_processing(image_path: Path, sprites: list, contrast: float, sharpness: float, resolution: int) -> Image:
     with Image.open(image_path).convert('L') as image:
         image = resize_image(image, resolution)
         enhancer = ImageEnhance.Contrast(image)
@@ -131,8 +131,8 @@ def image_processing(image_path: Path, sprites: list, contrast: float, sharpness
 
     return output_image
 
-def video_processing(video_path: Path, threads: int, sprites: list, contrast: float, sharpness: float, resolution: int):
-    def frame_processing(image: Image, sprites: list, contrast: float, sharpness: float, resolution: int):
+def video_processing(video_path: Path, threads: int, sprites: list, contrast: float, sharpness: float, resolution: int) -> VideoFileClip:
+    def frame_processing(image: Image, sprites: list, contrast: float, sharpness: float, resolution: int) -> np.array:
         enhancer = ImageEnhance.Contrast(image)
         image = enhancer.enhance(factor=contrast)
         sharp_image = sharpen(image=image, factor=sharpness)
@@ -150,7 +150,7 @@ def video_processing(video_path: Path, threads: int, sprites: list, contrast: fl
 
             return np.array(output_image)
 
-    def process_clip(index, sprites, all_processed_frames, frames, contrast, sharpness, downscale_pot):
+    def process_clip(index, sprites, all_processed_frames, frames, contrast, sharpness, downscale_pot) -> None:
         processed_frames = []
         for frame in frames:
             frame = Image.fromarray(frame)
@@ -188,7 +188,7 @@ def video_processing(video_path: Path, threads: int, sprites: list, contrast: fl
     
     return final_clip
 
-def gif_processing(gif_path: Path, sprites: list, contrast: float, sharpness: float, resolution: int):
+def gif_processing(gif_path: Path, sprites: list, contrast: float, sharpness: float, resolution: int) -> BytesIO:
     gif = Image.open(gif_path)
     frames = []
     durations = []
@@ -219,7 +219,7 @@ def gif_processing(gif_path: Path, sprites: list, contrast: float, sharpness: fl
 
     return gif_buffer
     
-def is_image(file_path: Path):
+def is_image(file_path: Path) -> bool:
     try:
         with Image.open(file_path) as img:
             img.verify()
@@ -227,7 +227,7 @@ def is_image(file_path: Path):
     except (IOError, SyntaxError):
         return False
 
-def is_video(file_path: Path):
+def is_video(file_path: Path) -> bool:
     try:
         video = cv2.VideoCapture(file_path)
         if video.isOpened():
@@ -238,7 +238,7 @@ def is_video(file_path: Path):
     finally:
         video.release()
 
-def is_gif(file_path: Path):
+def is_gif(file_path: Path) -> bool: 
     try:
         with Image.open(file_path) as img:
             print(img.format)
