@@ -286,7 +286,8 @@ if __name__ == "__main__":
                         contrast=args.contrast,
                         sharpness=args.sharpness,
                         resolution=args.resolution)
-            with open("PyASCII_Gif.gif", "wb") as f:
+            output_file = args.output if args.output is not None else "PyASCII_Gif.gif"
+            with open(output_file, "wb") as f:
                 f.write(gif_buffer.getvalue())
 
         elif is_image(file_path=args.input):
