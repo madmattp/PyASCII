@@ -4,6 +4,7 @@ from PIL import Image, Image, ImageEnhance
 from moviepy.editor import VideoFileClip, ImageSequenceClip
 import time
 from multiprocessing import Process, Manager
+from threading import Thread
 import numpy as np
 import cv2
 import argparse
@@ -11,6 +12,7 @@ import tomllib
 from pathlib import Path
 from io import BytesIO
 import sys
+import os
 
 
 def load_filters() -> dict[str, tuple[tuple[int, int, int], tuple[int, int, int]]]:
@@ -174,7 +176,10 @@ def video_processing(video_path: Path, threads: int, sprites: list, contrast: fl
 
         subclip = video.subclip(start, end)
         frames = [frame for frame in subclip.iter_frames()]
-        proc = Process(target=process_clip, args=(i, sprites, all_processed_frames, frames, contrast, sharpness, resolution))
+        if os.name == "posix":
+            proc = Process(target=process_clip, args=(i, sprites, all_processed_frames, frames, contrast, sharpness, resolution))
+        elif os.name == "nt":
+            proc = Thread(target=process_clip, args=(i, sprites, all_processed_frames, frames, contrast, sharpness, resolution))
         procs.append(proc)
         proc.start()
 
