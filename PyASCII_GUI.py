@@ -32,10 +32,12 @@ def on_go():
 
     resolution = int(entry_resolution.get())
     filt = selected_option.get()
+    if filt == 'Default':
+        filt = None
     contrast = float(contrast_spinbox.get())
     sharpness = float(sharpness_spinbox.get())
     threads = int(threads_slider.get())
-    output_path = entry_output.get()
+    output_path =  None if entry_output.get() == "" else entry_output.get()
 
     try:
         sprite_sheet_image = Image.open("./sprite_sheet.png")
@@ -57,7 +59,7 @@ def on_go():
                         contrast=contrast,
                         sharpness=sharpness,
                         resolution=resolution)
-            output_file = output_path if output_path is not None else "PyASCII_Gif.png"
+            output_file = output_path if output_path is not None else "PyASCII_Gif.gif"
             with open(output_file, "wb") as f:
                 f.write(gif_buffer.getvalue())
 
@@ -80,7 +82,7 @@ def on_go():
             output_file = output_path if output_path is not None else "PyASCII_Video.mp4"
             ascii_video.write_videofile(output_file, codec="libx264")
 
-        end_time = time.time() 
+        end_time = time() 
         execution_time = end_time - start_time  
         messagebox.showinfo("Success!", f"Processing time: {execution_time:.4f} seconds")
     
@@ -95,6 +97,9 @@ def on_go():
     
     
 if __name__ == "__main__":
+    filters = load_filters()
+    filters['Default'] = None
+
     root = tk.Tk()
     root.title("PyASCII")
     root.geometry("300x520")
@@ -125,9 +130,9 @@ if __name__ == "__main__":
     filters_label = tk.Label(left_frame, text="Filters", font=("Helvetica", 10, "bold"))
     filters_label.grid(row=4, column=0, padx=10, pady=(5, 0), sticky='w')
 
-    options = list(load_filters().keys())
+    options = list(filters.keys())
     selected_option = tk.StringVar(root)
-    selected_option.set(options[0])
+    selected_option.set(options[10])
 
     option_menu = tk.OptionMenu(left_frame, selected_option, *options)
     option_menu.grid(row=5, column=0, padx=10, pady=5, sticky='w')
