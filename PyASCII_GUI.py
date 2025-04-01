@@ -39,8 +39,14 @@ def on_go():
     threads = int(threads_slider.get())
     output_path =  None if entry_output.get() == "" else entry_output.get()
 
+    def get_resource_path(relative_path):
+        if hasattr(sys, '_MEIPASS'):
+            return os.path.join(sys._MEIPASS, relative_path)
+        return os.path.join(os.getcwd(), relative_path)
+
     try:
-        sprite_sheet_image = Image.open("./sprite_sheet.png")
+        sprite_sheet_path = get_resource_path("sprite_sheet.png")
+        sprite_sheet_image = Image.open(sprite_sheet_path)
         global sprite_height, sprite_width
         sprite_height = 8
         sprite_width = 8
@@ -79,8 +85,17 @@ def on_go():
                         contrast=contrast,
                         sharpness=sharpness,
                         resolution=resolution)
+            w, h = ascii_video.size
+            w = w if w % 2 == 0 else w + 1
+            h = h if h % 2 == 0 else h + 1
+            ascii_video = ascii_video.resize((w, h))
             output_file = output_path if output_path is not None else "PyASCII_Video.mp4"
-            ascii_video.write_videofile(output_file, codec="libx264")
+            ascii_video.write_videofile(output_file,
+                                        codec="libx264",
+                                        audio_codec="aac",
+                                        threads=threads,
+                                        preset="slow",
+                                        ffmpeg_params=["-pix_fmt", "yuv420p"])
 
         end_time = time() 
         execution_time = end_time - start_time  
@@ -97,12 +112,16 @@ def on_go():
     
     
 if __name__ == "__main__":
+    if getattr(sys, 'frozen', False):
+        import multiprocessing
+        multiprocessing.freeze_support()
+
     filters = load_filters()
     filters['Default'] = None
 
     root = tk.Tk()
     root.title("PyASCII")
-    root.geometry("300x520")
+    root.geometry("300x550")
 
     # Frame para alinhar os widgets à esquerda
     left_frame = tk.Frame(root)

@@ -178,8 +178,9 @@ def video_processing(video_path: Path, threads: int, sprites: list, contrast: fl
         frames = [frame for frame in subclip.iter_frames()]
         if os.name == "posix":
             proc = Process(target=process_clip, args=(i, sprites, all_processed_frames, frames, contrast, sharpness, resolution))
-        elif os.name == "nt":
+        elif os.name == "nt":  # Windows
             proc = Thread(target=process_clip, args=(i, sprites, all_processed_frames, frames, contrast, sharpness, resolution))
+        
         procs.append(proc)
         proc.start()
 
@@ -271,12 +272,23 @@ def parse_arguments():
 sprite_height = 8
 sprite_width = 8
 if __name__ == "__main__":
+    if getattr(sys, 'frozen', False):
+        import multiprocessing
+        multiprocessing.freeze_support()
+
     start_time = time.time()
     
     args = parse_arguments()
 
+    
+    def get_resource_path(relative_path):
+        if hasattr(sys, '_MEIPASS'):
+            return os.path.join(sys._MEIPASS, relative_path)
+        return os.path.join(os.getcwd(), relative_path)
+
     try:
-        sprite_sheet_image = Image.open("./sprite_sheet.png")
+        sprite_sheet_path = get_resource_path("sprite_sheet.png")
+        sprite_sheet_image = Image.open(sprite_sheet_path)
         sprites = load_sprites(sprite_sheet_image=sprite_sheet_image,
                             sprite_width=sprite_width,
                             sprite_height=sprite_height,
@@ -313,7 +325,16 @@ if __name__ == "__main__":
                         sharpness=args.sharpness,
                         resolution=args.resolution)
             output_file = args.output if args.output is not None else "PyASCII_Video.mp4"
-            ascii_video.write_videofile(output_file, codec="libx264")
+            w, h = ascii_video.size
+            w = w if w % 2 == 0 else w + 1
+            h = h if h % 2 == 0 else h + 1
+            ascii_video = ascii_video.resize((w, h))
+            ascii_video.write_videofile(output_file,
+                                        codec="libx264",
+                                        audio_codec="aac",
+                                        threads=args.threads,
+                                        preset="slow",
+                                        ffmpeg_params=["-pix_fmt", "yuv420p"])
     
     except ValueError:
         print(f"[ ValueError ] Input file does not have a valid format!")
