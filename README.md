@@ -5,76 +5,61 @@
 
 # PyASCII
 [![image](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)](https://www.python.org/downloads/release/python-3119/)
-[![image](https://img.shields.io/badge/OpenCV-27338e?style=for-the-badge&logo=OpenCV&logoColor=white)](https://pypi.org/project/opencv-python/)
 
-PyASCII is a Python script that applies an ASCII art filter to both images and videos. The script allows for customization of resolution, contrast, and color filters, and processes videos by dividing them into subclips for efficient processing.
+PyASCII is a Python script that applies an ASCII filter to both images and videos. The script allows for customization of resolution, contrast, sharpness, and color filters.
 
 The Sprite Sheet used in the script was made by [@DanXimemes](https://x.com/DanXimemes)
 
 ## Features
 
-- **Image Processing**: Convert images to ASCII art with adjustable resolution and optional contrast enhancement.
-- **Video Processing**: Convert videos to ASCII art by processing video frames in chunks, optimizing disk space by periodically merging subclips.
-- **Custom Filters**: Apply various monochrome filters to the output.
-- **Multi-Processing**: Utilizes multiple CPU cores for faster video processing.
+- **Image, GIF, and Video Processing**: Convert media files into ASCII art.
+- **Customizable Filters**: Apply color filters using built-in options or configure your own through the [filters.toml](https://github.com/madmattp/PyASCII/blob/main/filters.toml) file.
+- **Multi-threaded Video Processing**: Speeds up video conversion by utilizing multiple CPU cores.
 
-## New: Simple GUI Version
+## Graphical User Interface
 
-- **Simple GUI**: A new version of the script includes a basic Graphical User Interface (GUI) that simplifies the process of selecting files, adjusting settings, and executing the conversion. This GUI version is designed to be user-friendly, especially for those who prefer a visual interface over command-line operations.
+A separate script includes a basic Graphical User Interface (GUI) that simplifies the process of selecting files, adjusting settings, and executing the conversion. This GUI version is designed to be user-friendly, especially for those who prefer a visual interface over command-line operations.
 
-To use the GUI version, simply run the `PyASCII_GUI.py` script. The GUI allows you to:
+To use the GUI version, simply run the `PyASCII_GUI.py` script or the packaged executable at the [release page](https://github.com/madmattp/PyASCII/releases).
 
-- Select an image or video file.
-- Set the desired resolution and filter options.
-- Start the ASCII conversion process with a single click.
+## Installation
+1. Clone the repository:
+    ```
+    git clone https://github.com/madmattp/PyASCII.git
+    ```
+2. Install dependencies:
+    ```
+    pip install -r requirements.txt
+    ```
 
-
-## Requirements
-- Linux or Windows Operating System
-- Python >= 3.11
-- Required Python libraries:
-  - `Pillow==10.4.0`
-  - `moviepy==1.0.3`
-  - `opencv_contrib_python==4.10.0.84`
-  - `numpy==2.0.1`
-
-Install the required libraries using pip:
-
-```bash
-pip install -r requirements.txt
-```
 ## Usage
 To run the script, use the following command:
 ```bash
-python PyASCII.py -m <media_file> [options]
+python PyASCII.py -i <media_file> [options]
 ```
 
-### Arguments
-- m, --media MEDIA_FILE
-  - Specifies the input image or video file (required).
-- r, --resolution RES
-  - Sets the resolution of the output (default is 720).
-- f, --filter FILTER
-  -  Applies a monochrome filter to the output. Available filters:
-      - Orange, Capuccino, Brat, Fairy, Bloody, Lavender, Poiple, Cyan, Vapor
-- c, --contrast
-  - Increases the contrast of the output image or video.
-- o, --output PATH
-  - Specifies the output file path.
+### Command Line Options:
+- ```-i, --input PATH```: Specifies the input image or video file (**Required**).
+- ```-r, --resolution RES```: Sets the resolution of the output (Default is 720).
+- ```-f, --filter FILTER```: Applies a monochrome filter to the output.
+- ```-c, --contrast FACTOR```: Adjusts the contrast (Default: 1).
+- ```-s, --sharpness FACTOR```: Adjusts the sharpness (Default: 1).
+- ```-t, --threads INTEGER```: Specifies the number of threads for processing (Default: 1)
+- ```-o, --output PATH```: Specifies the output file path.  If not set, a default name will be used.
 
 ## Examples
 ### Convert an Image
 ```bash
-python PyASCII.py -m cat_image.jfif -r 480 -c -f Orange -o output_image.png
+python3 PyASCII.py -i cat_image.jfif -r 480 -s 1.6 -c 1.7 -f Orange -o output_image.png
 ```
 <p align="center">
   <img src="https://github.com/user-attachments/assets/c2414558-f241-4c61-b203-00be3e6b0b91" alt="cat_input" width="45%">
-  <img src="https://github.com/user-attachments/assets/d178fe02-52b4-467f-9cec-67b40ecc3057" alt="cat_output" width="45%">
+  <img src="https://github.com/user-attachments/assets/8aec08c9-c3e1-4c90-84f4-5dd41d785395" alt="cat_output" width="45%">
 </p>
 
 ### Convert a Video
 ```bash
-python3.11 PyASCII.py -m cat_huh.mp4 -r 1080 -f Brat
+python3 PyASCII.py -i cat_huh.mp4 -r 1080 -f Brat
 ```
 <p align="center">
   <video src="https://github.com/user-attachments/assets/1d1abe14-625d-4bd7-87e6-00cb6b14da05" width="45%" controls></video>
@@ -85,27 +70,16 @@ python3.11 PyASCII.py -m cat_huh.mp4 -r 1080 -f Brat
 ### Image Processing:
 1. The image is resized while maintaining its aspect ratio.
 2. The pixel values are mapped to ASCII characters based on their brightness.
-3. The resulting image is saved as a PNG file at `./PyASCII/output/PyAscii_image.png` or at a custom PATH defined by the `-o` flag.
+3. The resulting image is saved as a PNG file at `./PyASCII_Image.png` or at a custom PATH defined by the `-o` flag.
 
 ### Video Processing:
-1. The video is split into 5-second subclips.
+1. The video is split into subclips.
 2. Each subclip is processed into ASCII art frames.
-3. Processed subclips are periodically merged to minimize the number of intermediate files.
-4. The final video is generated by concatenating the processed subclips, with the original audio track added back.
-
-## Project Structure
-```bash
-PyASCII.py          # Main script
-sprite_sheet.png    # Sprite sheet used for ASCII art
-filters.toml        # Filters
-PyASCII/
-├── temp/           # Temporary directory for storing subclips
-└── output/         # Directory for storing the final output
-```
+3. The final video is generated by concatenating the processed subclips, with the original audio track added back.
 
 ## Notes
-- Make sure the sprite sheet ([sprite_sheet.png](./sprite_sheet.png)) is available in the script's directory.
-- The script uses multi-processing to speed up video processing. By default, it executes `os.cpu_count() - 1` processes simultaneously. Adjust the number of parallel processes based on your CPU's capabilities.
+- Ensure that the sprite sheet ([sprite_sheet.png](./sprite_sheet.png)) is available in the script's directory.
+- For faster video processing, increase the number of threads using the `-t` option (depending on your CPU's core count).
 
 
 
