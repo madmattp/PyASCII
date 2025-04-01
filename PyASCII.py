@@ -280,6 +280,7 @@ if __name__ == "__main__":
         print("[ FileNotFoundError ] Sprite Sheet 'sprite_sheet.png' not found!")
 
     try:
+        open(args.input)
         if is_gif(file_path=args.input):
             gif_buffer = gif_processing(gif_path=args.input,
                         sprites=sprites,
