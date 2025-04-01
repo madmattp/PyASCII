@@ -263,6 +263,8 @@ def parse_arguments():
     args = parser.parse_args()
     return args
 
+sprite_height = 8
+sprite_width = 8
 if __name__ == "__main__":
     start_time = time.time()
     
@@ -270,8 +272,6 @@ if __name__ == "__main__":
 
     try:
         sprite_sheet_image = Image.open("./sprite_sheet.png")
-        sprite_height = 8
-        sprite_width = 8
         sprites = load_sprites(sprite_sheet_image=sprite_sheet_image,
                             sprite_width=sprite_width,
                             sprite_height=sprite_height,
