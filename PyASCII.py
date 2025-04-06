@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-from PIL import Image, Image, ImageEnhance
+from PIL import Image, ImageEnhance
 from moviepy.editor import VideoFileClip, ImageSequenceClip
 import time
 from multiprocessing import Process, Manager
 from threading import Thread
 import numpy as np
-import cv2
+from cv2 import VideoCapture
 import argparse
 import tomllib
 from pathlib import Path
@@ -235,7 +235,7 @@ def is_image(file_path: Path) -> bool:
 
 def is_video(file_path: Path) -> bool:
     try:
-        video = cv2.VideoCapture(file_path)
+        video = VideoCapture(file_path)
         if video.isOpened():
             return True
         return False
